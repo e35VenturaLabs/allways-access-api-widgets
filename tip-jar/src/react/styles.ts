@@ -180,7 +180,7 @@ export const css = `:where(.tipjar) {${LIGHT}
 `;
 
 // Adds the styles to `doc` once. A strict CSP needs `nonce` (or pass `unstyled` to <TipJar> and
-// load "@venturalabs/allways-tip-jar/styles.css" as a stylesheet instead).
+// load "@venturalabs.ai/allways-tip-jar/styles.css" as a stylesheet instead).
 export function ensureStyles(doc: Document, nonce?: string): void {
   if (doc.getElementById(STYLE_ELEMENT_ID)) return;
   const el = doc.createElement("style");

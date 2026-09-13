@@ -1,5 +1,5 @@
 // Cloudflare Pages Functions adapter. The whole route, in functions/api/tip/[[path]].ts:
-//   export { onRequest } from "@venturalabs/allways-tip-jar/cloudflare-pages";
+//   export { onRequest } from "@venturalabs.ai/allways-tip-jar/cloudflare-pages";
 // Configured by the environment (see the README's variable table), with a KV namespace bound
 // as TIP_RATE for the spend budget. Visitor location comes from request.cf.
 import { optionsFromEnv, type TipJarEnv } from "./env.js";

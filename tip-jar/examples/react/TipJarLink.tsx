@@ -1,8 +1,8 @@
 "use client";
 // A footer link that opens the tip jar. The jar stays mounted so an in-flight tip survives
-// closing and reopening it. Import "@venturalabs/allways-tip-jar/styles.css" once at your app root.
+// closing and reopening it. Import "@venturalabs.ai/allways-tip-jar/styles.css" once at your app root.
 import { useState } from "react";
-import { TipJar } from "@venturalabs/allways-tip-jar/react";
+import { TipJar } from "@venturalabs.ai/allways-tip-jar/react";
 
 export function TipJarLink() {
   const [open, setOpen] = useState(false);

@@ -1,2 +1,2 @@
 // Cloudflare Pages serves this file at /api/tip and everything under it.
-export { onRequest } from "@venturalabs/allways-tip-jar/cloudflare-pages";
+export { onRequest } from "@venturalabs.ai/allways-tip-jar/cloudflare-pages";

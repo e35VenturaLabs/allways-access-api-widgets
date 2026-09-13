@@ -20,7 +20,7 @@ export interface TipJarProps {
   className?: string;
   // The built-in palette: "auto" follows the visitor's system setting.
   theme?: "light" | "dark" | "auto";
-  // Skip the built-in styles, to bring your own or to load "@venturalabs/allways-tip-jar/styles.css".
+  // Skip the built-in styles, to bring your own or to load "@venturalabs.ai/allways-tip-jar/styles.css".
   unstyled?: boolean;
   nonce?: string; // CSP nonce for the injected <style> tag
 }

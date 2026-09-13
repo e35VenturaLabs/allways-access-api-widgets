@@ -1,10 +1,10 @@
 # Allways Access API widgets
 
-Drop-in website widgets built on the [Allways](https://all-ways.io) Access API. Each widget is its own npm package under `@venturalabs`, so a site installs only what it uses.
+Drop-in website widgets built on the [Allways](https://all-ways.io) Access API. Each widget is its own npm package under `@venturalabs.ai`, so a site installs only what it uses.
 
 | Widget | Install | What it does |
 |---|---|---|
-| [Tip jar](tip-jar/) | `npm install @venturalabs/allways-tip-jar` | Visitors tip in the coin they hold; you receive TAO or SOL |
+| [Tip jar](tip-jar/) | `npm install @venturalabs.ai/allways-tip-jar` | Visitors tip in the coin they hold; you receive TAO or SOL |
 
 Every widget's README starts with a one-prompt install you can hand to a coding agent.
 
@@ -19,7 +19,7 @@ allways-access-api-widgets/
 ├── .github/workflows/
 │   ├── ci.yml           typecheck, test, build and pack on every PR and push to main
 │   └── release.yml      manual: publishes one widget to npm
-└── tip-jar/             @venturalabs/allways-tip-jar
+└── tip-jar/             @venturalabs.ai/allways-tip-jar
     ├── package.json
     ├── README.md        setup guide and one-prompt install
     ├── src/             TypeScript source (shipped too, for people who copy it in)
@@ -39,7 +39,7 @@ npm test -w tip-jar        # one widget
 
 ## Adding a widget
 
-1. Create `<widget>/` with a `package.json` named `@venturalabs/allways-<widget>`. Copy `tip-jar/package.json`, `tip-jar/tsconfig.*.json` and `tip-jar/vitest.config.ts` as the starting point.
+1. Create `<widget>/` with a `package.json` named `@venturalabs.ai/allways-<widget>`. Copy `tip-jar/package.json`, `tip-jar/tsconfig.*.json` and `tip-jar/vitest.config.ts` as the starting point.
 2. Add the folder to `workspaces` in the root `package.json`, and to the `widget` choices in `.github/workflows/release.yml`.
 3. Follow the tip jar's rules:
    - The API key only ever lives in a server half, with a one-line adapter per host.
@@ -71,7 +71,7 @@ Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishe
 
 **One-time setup, per organization**
 1. Turn on two-factor authentication on the npm account. npm now only accepts a **passkey** or a security key for new setups, not an authenticator-app code. A passkey saved in 1Password, Bitwarden, iCloud Keychain or Google Password Manager works.
-2. Create the free `venturalabs` organization on [npmjs.com](https://www.npmjs.com/org/create).
+2. Create the free `venturalabs.ai` organization on [npmjs.com](https://www.npmjs.com/org/create). Done: it's owned by the npm user `ventura_labs`.
 3. Make this repository public, since the READMEs link to it and npm provenance needs it.
 4. If `main` is branch-protected, add a **`RELEASE_TOKEN`** secret: a fine-grained GitHub token (not an npm token) with contents write access that is allowed to push to `main`. Without branch protection, the built-in token is enough.
 5. Optionally add **`DISCORD_WEBHOOK`** for release announcements.

@@ -1,6 +1,6 @@
 // Next.js App Router adapter (Vercel, or any host running Next). The whole route, in
 // app/api/tip/[[...path]]/route.ts:
-//   export { GET, POST } from "@venturalabs/allways-tip-jar/next";
+//   export { GET, POST } from "@venturalabs.ai/allways-tip-jar/next";
 // Configured by the environment (see the README's variable table). In production the spend
 // budget lives in Upstash Redis (UPSTASH_REDIS_REST_URL / _TOKEN, free tier is plenty);
 // `next dev` runs one process, so it counts in memory. Visitor location comes from Vercel's

@@ -1,23 +1,23 @@
 # Tip jar
 
-**`@venturalabs/allways-tip-jar`** is a drop-in crypto tip jar for any website. Visitors tip in the coin they already hold (SOL, BTC, ETH, USDC on several chains, and more), and it lands in your wallet as **TAO** or **SOL**. The swap runs on [Allways](https://all-ways.io) through the Allways Access API, so visitors never need your coin, an exchange account, or a wallet connection. They copy an address and send.
+**`@venturalabs.ai/allways-tip-jar`** is a drop-in crypto tip jar for any website. Visitors tip in the coin they already hold (SOL, BTC, ETH, USDC on several chains, and more), and it lands in your wallet as **TAO** or **SOL**. The swap runs on [Allways](https://all-ways.io) through the Allways Access API, so visitors never need your coin, an exchange account, or a wallet connection. They copy an address and send.
 
 ```bash
-npm install @venturalabs/allways-tip-jar
+npm install @venturalabs.ai/allways-tip-jar
 ```
 
 It's two lines of code:
 
 ```tsx
 // 1. Anywhere in your React app. Styles are included.
-import { TipJar } from "@venturalabs/allways-tip-jar/react";
+import { TipJar } from "@venturalabs.ai/allways-tip-jar/react";
 <TipJar open={open} onClose={() => setOpen(false)} turnstileSiteKey="0x4AAA…" />
 ```
 
 ```ts
 // 2. One server route, one line on your host.
-export { onRequest } from "@venturalabs/allways-tip-jar/cloudflare-pages"; // Cloudflare Pages: functions/api/tip/[[path]].ts
-export { GET, POST } from "@venturalabs/allways-tip-jar/next";            // Next.js: app/api/tip/[[...path]]/route.ts
+export { onRequest } from "@venturalabs.ai/allways-tip-jar/cloudflare-pages"; // Cloudflare Pages: functions/api/tip/[[path]].ts
+export { GET, POST } from "@venturalabs.ai/allways-tip-jar/next";            // Next.js: app/api/tip/[[...path]]/route.ts
 ```
 
 The server route isn't optional: it keeps your API key secret and your payout address fixed. See [Why there's a server route](#why-theres-a-server-route).
@@ -43,11 +43,11 @@ The server route isn't optional: it keeps your API key secret and your payout ad
 Paste this into your coding agent (Claude Code, Cursor, Codex, …) from the root of your site's repo, with the brackets filled in:
 
 ```text
-Add the Allways tip jar to this site using the npm package @venturalabs/allways-tip-jar.
+Add the Allways tip jar to this site using the npm package @venturalabs.ai/allways-tip-jar.
 
 Read its README in full first, then follow its "Install steps" section exactly:
 https://github.com/e35VenturaLabs/allways-access-api-widgets/tree/main/tip-jar
-(After installing, the same README is at node_modules/@venturalabs/allways-tip-jar/README.md.)
+(After installing, the same README is at node_modules/@venturalabs.ai/allways-tip-jar/README.md.)
 
 - Tips should arrive as: [TAO or SOL]
 - My payout address: [your TAO or SOL address]
@@ -84,12 +84,12 @@ poll every 3s    ── status ───▶                                    �
 
 | Import | Use it for |
 |---|---|
-| `@venturalabs/allways-tip-jar/react` | `<TipJar>` (styles included), the headless `useTipJar()` hook, `defaultCopy` |
-| `@venturalabs/allways-tip-jar/cloudflare-pages` | The whole server route on Cloudflare Pages (`onRequest`) |
-| `@venturalabs/allways-tip-jar/next` | The whole server route on Next.js App Router (`GET`, `POST`) |
-| `@venturalabs/allways-tip-jar/server` | `createTipHandler()` for any other host, plus `memoryBudget()` and `upstashBudget()` |
-| `@venturalabs/allways-tip-jar/styles.css` | Optional. Only for `<TipJar unstyled>` under a strict content security policy. |
-| `@venturalabs/allways-tip-jar/types` | Wire types shared by both halves |
+| `@venturalabs.ai/allways-tip-jar/react` | `<TipJar>` (styles included), the headless `useTipJar()` hook, `defaultCopy` |
+| `@venturalabs.ai/allways-tip-jar/cloudflare-pages` | The whole server route on Cloudflare Pages (`onRequest`) |
+| `@venturalabs.ai/allways-tip-jar/next` | The whole server route on Next.js App Router (`GET`, `POST`) |
+| `@venturalabs.ai/allways-tip-jar/server` | `createTipHandler()` for any other host, plus `memoryBudget()` and `upstashBudget()` |
+| `@venturalabs.ai/allways-tip-jar/styles.css` | Optional. Only for `<TipJar unstyled>` under a strict content security policy. |
+| `@venturalabs.ai/allways-tip-jar/types` | Wire types shared by both halves |
 
 React 18 or newer is a peer dependency, needed only for `/react`. The TypeScript source ships in `src/` too, if you'd rather copy it into your project and change it freely.
 
@@ -140,7 +140,7 @@ Follow these in order. They're written for an agent, but people can follow them 
 ### 2. Install the package
 
 ```bash
-npm install @venturalabs/allways-tip-jar
+npm install @venturalabs.ai/allways-tip-jar
 ```
 
 ### 3. Add the server route
@@ -149,8 +149,8 @@ It must answer **`/api/tip`** and every sub-path under it (`/api/tip/options`, `
 
 | Host | File | Contents |
 |---|---|---|
-| Cloudflare Pages | `functions/api/tip/[[path]].ts` | `export { onRequest } from "@venturalabs/allways-tip-jar/cloudflare-pages";` |
-| Next.js (App Router) | `app/api/tip/[[...path]]/route.ts` | `export { GET, POST } from "@venturalabs/allways-tip-jar/next";` |
+| Cloudflare Pages | `functions/api/tip/[[path]].ts` | `export { onRequest } from "@venturalabs.ai/allways-tip-jar/cloudflare-pages";` |
+| Next.js (App Router) | `app/api/tip/[[...path]]/route.ts` | `export { GET, POST } from "@venturalabs.ai/allways-tip-jar/next";` |
 | Anything else | your server | `createTipHandler()`, see [Hosting recipes](#hosting-recipes) |
 
 To mount it somewhere other than `/api/tip`, set `TIP_BASE_PATH` on the server and pass the same path as `endpoint` to the widget.
@@ -163,7 +163,7 @@ Put the trigger where the user asked for it. Keep `<TipJar>` mounted and toggle 
 
 ```tsx
 import { useState } from "react";
-import { TipJar } from "@venturalabs/allways-tip-jar/react";
+import { TipJar } from "@venturalabs.ai/allways-tip-jar/react";
 
 export function TipJarLink() {
   const [open, setOpen] = useState(false);
@@ -244,7 +244,7 @@ The Cloudflare and Next.js adapters read these names. With `createTipHandler()` 
 
 1. Create `functions/api/tip/[[path]].ts`:
    ```ts
-   export { onRequest } from "@venturalabs/allways-tip-jar/cloudflare-pages";
+   export { onRequest } from "@venturalabs.ai/allways-tip-jar/cloudflare-pages";
    ```
 2. Create the counter namespace with `npx wrangler kv namespace create TIP_RATE` and bind it in `wrangler.jsonc`. See [`examples/cloudflare-pages/wrangler.jsonc`](examples/cloudflare-pages/wrangler.jsonc).
 3. Put `TIP_PAYOUT_ADDRESS` and `TIP_PAYOUT_COIN` under `vars`.
@@ -261,7 +261,7 @@ Visitor location comes from `request.cf` automatically.
 
 1. Create `app/api/tip/[[...path]]/route.ts`:
    ```ts
-   export { GET, POST } from "@venturalabs/allways-tip-jar/next";
+   export { GET, POST } from "@venturalabs.ai/allways-tip-jar/next";
    ```
 2. In production, create a free Upstash Redis database and set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. On Vercel, the Upstash integration sets both for you.
 3. Set `ALLWAYS_API_KEY`, `TURNSTILE_SECRET`, `TIP_PAYOUT_ADDRESS`, `TIP_PAYOUT_COIN` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
@@ -274,7 +274,7 @@ Visitor location comes from Vercel's `x-vercel-ip-country` headers, or Cloudflar
 
 ```ts
 import express from "express";
-import { createTipHandler, memoryBudget, optionsFromEnv } from "@venturalabs/allways-tip-jar/server";
+import { createTipHandler, memoryBudget, optionsFromEnv } from "@venturalabs.ai/allways-tip-jar/server";
 
 const handler = createTipHandler({
   ...optionsFromEnv(process.env),
@@ -367,7 +367,7 @@ The widget doesn't load web fonts. Inter and DM Mono show up if your site alread
 
 `defaultCopy` lists every key. The rate-limit, captcha and region messages come from the server route.
 
-**Strict content security policy.** If your CSP blocks inline styles, either pass `nonce={yourNonce}`, or pass `unstyled` and load `@venturalabs/allways-tip-jar/styles.css` as a normal stylesheet.
+**Strict content security policy.** If your CSP blocks inline styles, either pass `nonce={yourNonce}`, or pass `unstyled` and load `@venturalabs.ai/allways-tip-jar/styles.css` as a normal stylesheet.
 
 **Your own UI.** `useTipJar({ endpoint, active, defaultCoin })` returns every piece of state (`phase`, `options`, `coin`, `amount`, `quote`, `tip`, `secondsLeft`, `expired`, …) and every action (`pickCoin`, `setAmount`, `setFromAddress`, `submit(captchaToken)`, `reset`). Render it with shadcn/ui, MUI, Chakra, or anything else. [`src/react/TipJar.tsx`](src/react/TipJar.tsx) is a complete worked example, and `Turnstile` is exported for your own form.
 
@@ -379,7 +379,7 @@ Please keep the "Powered by Allways" line.
 
 ## Not using React: the HTTP contract
 
-The server route works with any framework. Build the UI in Vue, Svelte or plain JavaScript against these four calls. Types are in `@venturalabs/allways-tip-jar/types`.
+The server route works with any framework. Build the UI in Vue, Svelte or plain JavaScript against these four calls. Types are in `@venturalabs.ai/allways-tip-jar/types`.
 
 | Call | Returns |
 |---|---|

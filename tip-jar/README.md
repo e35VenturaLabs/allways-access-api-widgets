@@ -1,6 +1,6 @@
 # Tip jar
 
-**`@venturalabs.ai/allways-tip-jar`** is a drop-in crypto tip jar for any website. Visitors tip in the coin they already hold (SOL, BTC, ETH, USDC on several chains, and more), and it lands in your wallet as **TAO** or **SOL**. The swap runs on [Allways](https://all-ways.io) through the Allways Access API, so visitors never need your coin, an exchange account, or a wallet connection. They copy an address and send.
+**`@venturalabs.ai/allways-tip-jar`** is a drop-in crypto tip jar for any website. Visitors tip in the coin they already hold (SOL, BTC, ETH, USDC on several chains, and more), and it lands in your wallet in the coin you pick. That can be any coin Allways supports, but **SOL** or **TAO** is best: every other coin swaps into those two, so visitors get the most choice. The swap runs on [Allways](https://all-ways.io) through the Allways Access API, so visitors never need your coin, an exchange account, or a wallet connection. They copy an address and send.
 
 ```bash
 npm install @venturalabs.ai/allways-tip-jar
@@ -49,8 +49,8 @@ Read its README in full first, then follow its "Install steps" section exactly:
 https://github.com/e35VenturaLabs/allways-access-api-widgets/tree/main/tip-jar
 (After installing, the same README is at node_modules/@venturalabs.ai/allways-tip-jar/README.md.)
 
-- Tips should arrive as: [TAO or SOL]
-- My payout address: [your TAO or SOL address]
+- Tips should arrive as: [any coin Allways supports; SOL or TAO accepts the most coins]
+- My payout address: [your address on that coin]
 - Where the trigger goes: [e.g. a "Tip jar" link in the footer]
 
 Never write my API key or Turnstile secret into code, config files or chat. When you're done,
@@ -72,7 +72,7 @@ type an amount   ── quote ────▶  live min/max + what it buys      
                  ◀─ deposit address + exact amount + countdown
 send the coins from their own wallet  ─────────────────────────────────▶  miner swaps it into your coin
 poll every 3s    ── status ───▶                                    ──▶   GET /v1/exchanges/:id
-                 ◀─ "Got it. Thanks!!"                                    TAO/SOL lands at your payout address
+                 ◀─ "Got it. Thanks!!"                                    your coin lands at your payout address
 ```
 
 - **Two halves.** The **server route** holds your API key and pins your payout address. The **widget** only ever talks to that route. The browser never sees the key, and a visitor can't redirect where tips go.
@@ -114,11 +114,9 @@ These need a human. An agent can't do them for you.
 
 1. **An Allways Access API key.** Sign in at [all-ways.io/api-access](https://all-ways.io/api-access), accept the [Terms](https://docs.all-ways.io/terms), and press **Generate key**. It's shown once, so store it now. It looks like `alw_live_…`. (API access may be invite-only for a while; the page says so if it is.)
 2. **Credits on that account.** Every "Get address" that succeeds costs one credit (see [Costs](#costs-and-limits)). Accounts that sign in with Google or GitHub get 2 free credits. To top up, call `GET /v1/account` with your key and send TAO to the `depositAddress` it returns. The same call shows `taoPerCredit` and `minTopUpTao`.
-3. **A payout address** for the coin you want tips in:
-   - `tao`, a Bittensor address (`5…`). This is the default.
-   - `sol`, a Solana address.
-
-   Every other Allways coin pairs with both of these hubs, so either gives visitors the full coin list.
+3. **A payout address** on the coin you want tips to arrive as. Any Allways coin works (`sol`, `tao`, `btc`, `eth`, `arbusdc`, …; the full list is `GET /v1/currencies`), but a hub gives visitors the most choice:
+   - **`sol` or `tao` (recommended; `tao` is the default).** These are Allways' hubs. Every other coin swaps into them, so visitors can tip in any coin Allways supports.
+   - **Any other coin, such as `btc`.** Other coins only swap into the hubs, so visitors can tip in that coin directly, or in SOL or TAO, but nothing else.
 4. **A Cloudflare Turnstile widget** (free, and it works on any host, not just Cloudflare). In the Cloudflare dashboard go to **Turnstile → Add widget**, add your domain, and choose **Invisible** or **Managed**. You get a public **site key** and a private **secret**. Without this, bots could burn your credits.
 5. **A shared counter store**, which the route uses to cap how many addresses it hands out:
    - **Cloudflare Pages:** a KV namespace, one command.
@@ -221,7 +219,7 @@ The Cloudflare and Next.js adapters read these names. With `createTipHandler()` 
 |---|---|---|---|---|
 | `ALLWAYS_API_KEY` | **secret** | yes | none | Allways Access API key (`alw_live_…`) |
 | `TIP_PAYOUT_ADDRESS` | public | yes | none | Where tips land, on the payout coin |
-| `TIP_PAYOUT_COIN` | public | no | `tao` | Coin tips arrive as: `tao` or `sol` |
+| `TIP_PAYOUT_COIN` | public | no | `tao` | Coin tips arrive as: any Allways currency id; `tao` or `sol` accepts the most coins |
 | `TURNSTILE_SECRET` | **secret** | in production | none | Turnstile secret key, checked on every lock |
 | `TIP_RATE` | KV binding | Cloudflare | none | KV namespace for the counters |
 | `UPSTASH_REDIS_REST_URL` | public | Next.js production | none | Upstash Redis REST URL for the counters |

@@ -4,7 +4,7 @@ Drop-in website widgets built on the [Allways](https://all-ways.io) Access API. 
 
 | Widget | Install | What it does |
 |---|---|---|
-| [Tip jar](tip-jar/) | `npm install @venturalabs.ai/allways-tip-jar` | Visitors tip in the coin they hold; you receive TAO or SOL |
+| [Tip jar](tip-jar/) | `npm install @venturalabs.ai/allways-tip-jar` | Visitors tip in the coin they hold; you receive the Allways coin you choose |
 
 Every widget's README starts with a one-prompt install you can hand to a coding agent.
 

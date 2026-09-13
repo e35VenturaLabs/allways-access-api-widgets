@@ -100,6 +100,7 @@ jobs:
           PROVENANCE: ${{ github.event.repository.private && 'false' || 'true' }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
+          set -o pipefail # without it, `| tee` hides a failed stage and the run carries on
           if [ -n "$NPM_TOKEN" ]; then
             echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
             echo "Staging with the NPM_TOKEN secret."
@@ -109,7 +110,12 @@ jobs:
           args=(-w "$WIDGET" --access public)
           if [ "$PROVENANCE" = "true" ]; then args+=(--provenance); fi
           if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
-          npm stage publish "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/stage.log"
+          if ! npm stage publish "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/stage.log"; then
+            if grep -q ENEEDAUTH "$RUNNER_TEMP/stage.log"; then
+              echo "::error::npm couldn't sign in with trusted publishing. On npmjs.com, the package's Trusted Publisher must be GitHub Actions, repository $GITHUB_REPOSITORY, workflow release.yml, no environment, with npm stage publish allowed."
+            fi
+            exit 1
+          fi
 
       - name: Commit, tag and push
         if: ${{ !inputs.dry_run }}

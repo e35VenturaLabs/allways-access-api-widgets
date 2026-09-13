@@ -1,0 +1,13 @@
+{
+  "name": "allways-access-api-widgets",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "tip-jar"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces"
+  }
+}

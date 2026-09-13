@@ -1,0 +1,18 @@
+// Cloudflare Pages config for a site with the tip jar. Merge these keys into your own wrangler.jsonc.
+// Secrets (ALLWAYS_API_KEY, TURNSTILE_SECRET) never go here:
+//   npx wrangler pages secret put ALLWAYS_API_KEY --project-name <your-project>
+//   npx wrangler pages secret put TURNSTILE_SECRET --project-name <your-project>
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "<your-project>",
+  "compatibility_date": "2026-09-01",
+  "pages_build_output_dir": "dist",
+  "kv_namespaces": [
+    // Create with: npx wrangler kv namespace create TIP_RATE
+    { "binding": "TIP_RATE", "id": "<kv-namespace-id>" }
+  ],
+  "vars": {
+    "TIP_PAYOUT_COIN": "tao",
+    "TIP_PAYOUT_ADDRESS": "<your TAO address>"
+  }
+}

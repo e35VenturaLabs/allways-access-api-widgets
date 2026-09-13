@@ -1,0 +1,8 @@
+# Copy to .dev.vars (gitignored) for `wrangler pages dev`. In production, set the two secrets with
+# `wrangler pages secret put` and the plain vars in wrangler.jsonc.
+ALLWAYS_API_KEY=alw_live_...
+TIP_PAYOUT_COIN=tao
+TIP_PAYOUT_ADDRESS=5...
+# Leave TURNSTILE_SECRET empty and set TIP_SKIP_CAPTCHA=1 only on your own machine.
+TURNSTILE_SECRET=
+TIP_SKIP_CAPTCHA=1

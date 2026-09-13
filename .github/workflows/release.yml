@@ -1,0 +1,151 @@
+name: Release (publish a widget to npm)
+
+# Manual only: Actions → "Release (publish a widget to npm)" → Run workflow, from main.
+# Publishes with npm trusted publishing (OIDC), so no npm token is stored. See the root README.
+on:
+  workflow_dispatch:
+    inputs:
+      widget:
+        description: "Widget to release"
+        type: choice
+        options:
+          - tip-jar
+      bump:
+        description: "Version bump (semver): patch = fixes, minor = new features, major = breaking changes"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+      dry_run:
+        description: "Dry run: test, build and pack, but publish, commit and tag nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write # npm trusted publishing and provenance
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      WIDGET: ${{ inputs.widget }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Use the latest npm (trusted publishing needs 11.5.1 or newer)
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck, test and build
+        run: |
+          npm run typecheck -w "$WIDGET"
+          npm run test -w "$WIDGET"
+          npm run build -w "$WIDGET"
+
+      - name: Bump version
+        id: version
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          NAME=$(node -p "require('./$WIDGET/package.json').name")
+          if ! npm view "$NAME" name >/dev/null 2>&1; then
+            echo "::error::$NAME isn't on npm yet. Trusted publishing only works for an existing package: publish the first version by hand (see the root README), then rerun."
+            exit 1
+          fi
+          npm version "$BUMP" -w "$WIDGET" --no-git-tag-version
+          VERSION=$(node -p "require('./$WIDGET/package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::$NAME@$VERSION is already on npm. Pick a bigger bump."
+            exit 1
+          fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$WIDGET-v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to npm
+        env:
+          # Optional fallback. Leave the secret unset to use trusted publishing.
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # npm provenance only works from a public repository.
+          PROVENANCE: ${{ github.event.repository.private && 'false' || 'true' }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+            echo "Publishing with the NPM_TOKEN secret."
+          else
+            echo "Publishing with npm trusted publishing (OIDC)."
+          fi
+          args=(-w "$WIDGET" --access public)
+          if [ "$PROVENANCE" = "true" ]; then args+=(--provenance); fi
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          npm publish "${args[@]}"
+
+      - name: Commit, tag and push
+        if: ${{ !inputs.dry_run }}
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "release: $NAME@$VERSION"
+          git tag "$TAG"
+          git push origin HEAD:main
+          git push origin "$TAG"
+
+      - name: GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: gh release create "$TAG" --title "$NAME $VERSION" --generate-notes
+
+      - name: Notify Discord
+        if: ${{ !inputs.dry_run && env.DISCORD_WEBHOOK != '' }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          payload=$(jq -n --arg content "📦 **$NAME@$VERSION** published to npm — https://www.npmjs.com/package/$NAME" '{content: $content}')
+          curl -sS -H "Content-Type: application/json" -X POST -d "$payload" "$DISCORD_WEBHOOK"
+
+      - name: Summary
+        if: always()
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ -z "$VERSION" ]; then
+            echo "Stopped before a version was chosen. See the failed step." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run: would publish **$NAME@$VERSION**. Nothing was published, committed or tagged." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Published **$NAME@$VERSION** — https://www.npmjs.com/package/$NAME" >> "$GITHUB_STEP_SUMMARY"
+          fi

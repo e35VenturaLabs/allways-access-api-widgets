@@ -58,14 +58,18 @@ Releases run in GitHub Actions and are triggered by hand. Nobody publishes from 
 - `minor` for new features
 - `major` for breaking changes
 
-Tick **dry run** to rehearse without publishing anything.
+Tick **dry run** to rehearse without staging anything.
 
 The workflow:
 1. Installs dependencies, then typechecks, tests and builds the widget.
 2. Bumps the widget's version. It stops if that version is already on npm.
-3. Publishes to npm, with [provenance](https://docs.npmjs.com/generating-provenance-statements) once the repository is public.
-4. Commits the bump to `main` and tags it `<widget>-v<version>`.
-5. Creates a GitHub release with generated notes, and posts to Discord if a webhook is set.
+3. **Stages** it on npm ([staged publishing](https://docs.npmjs.com/staged-publishing/)), with [provenance](https://docs.npmjs.com/generating-provenance-statements) once the repository is public. A staged version reserves its number but isn't installable yet.
+4. Commits the bump to `main`, tags it `<widget>-v<version>`, drafts a GitHub release, and posts "staged" to Discord if a webhook is set.
+5. Waits up to 30 minutes for a maintainer to approve the staged version.
+
+**Approving a release.** Once the run reaches the waiting step, open npmjs.com → the package → **Staged packages** and press **Approve** (your passkey is required). From a terminal, `npm stage list <package>` then `npm stage approve <stage-id>` does the same. Approval is enabled once npm's malware scan finishes, usually within minutes. When the version goes live, the workflow publishes the GitHub release and posts "live" to Discord.
+
+If nobody approves within 30 minutes, the run still succeeds and the version stays staged. The run's summary lists the two finishing steps: approve on npm, then `gh release edit <tag> --draft=false --latest`. To cancel instead, `npm stage reject <stage-id>` and delete the draft release; the next run takes the next version number.
 
 Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/): npm trusts this repository's `release.yml` directly, so no npm token is stored anywhere.
 
@@ -78,7 +82,7 @@ Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishe
 
 **One-time setup, per new widget.** Trusted publishing can only be attached to a package that already exists, so each widget's first version goes out by hand:
 1. From a clean checkout of `main`, run `npm login`, then `npm publish -w <widget>`. npm opens the browser for the passkey.
-2. On npmjs.com, open the package → **Settings** → **Trusted publishing** → **GitHub Actions**. Set organization `e35VenturaLabs`, repository `allways-access-api-widgets`, workflow `release.yml`, and no environment.
+2. On npmjs.com, open the package → **Settings** → **Trusted publishing** → **GitHub Actions**. Set organization `e35VenturaLabs`, repository `allways-access-api-widgets`, workflow `release.yml`, and no environment. Under allowed actions, keep **npm stage publish** and leave **npm publish** unchecked, so the workflow can only stage and every release needs a maintainer's approval.
 3. Every later release goes through the workflow.
 
 If trusted publishing ever can't be used, a granular npm token saved as the **`NPM_TOKEN`** secret works as a fallback. Write tokens expire after at most 90 days.

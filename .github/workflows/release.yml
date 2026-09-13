@@ -1,7 +1,8 @@
 name: Release (publish a widget to npm)
 
 # Manual only: Actions → "Release (publish a widget to npm)" → Run workflow, from main.
-# Publishes with npm trusted publishing (OIDC), so no npm token is stored. See the root README.
+# Stages the widget on npm with trusted publishing (OIDC, no stored token). Nothing goes live until
+# a maintainer approves the staged version on npmjs.com with their passkey. See the root README.
 on:
   workflow_dispatch:
     inputs:
@@ -19,7 +20,7 @@ on:
           - major
         default: patch
       dry_run:
-        description: "Dry run: test, build and pack, but publish, commit and tag nothing"
+        description: "Dry run: test, build and pack, but stage, commit and tag nothing"
         type: boolean
         default: false
 
@@ -31,10 +32,14 @@ concurrency:
   group: release-${{ github.repository }}
   cancel-in-progress: false
 
+env:
+  APPROVAL_WAIT_MINUTES: 30
+
 jobs:
   release:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
       WIDGET: ${{ inputs.widget }}
     steps:
@@ -51,7 +56,7 @@ jobs:
           node-version: "24"
           cache: "npm"
 
-      - name: Use the latest npm (trusted publishing needs 11.5.1 or newer)
+      - name: Use the latest npm (staged publishing needs 11.15 or newer)
         run: npm install -g npm@latest
 
       - name: Install dependencies
@@ -83,7 +88,9 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$WIDGET-v$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Publish to npm
+      # Staging reserves the version number (a staged version can't be staged or published
+      # twice), so the commit and tag below are safe before approval.
+      - name: Stage on npm
         env:
           # Optional fallback. Leave the secret unset to use trusted publishing.
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -93,14 +100,14 @@ jobs:
         run: |
           if [ -n "$NPM_TOKEN" ]; then
             echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
-            echo "Publishing with the NPM_TOKEN secret."
+            echo "Staging with the NPM_TOKEN secret."
           else
-            echo "Publishing with npm trusted publishing (OIDC)."
+            echo "Staging with npm trusted publishing (OIDC)."
           fi
           args=(-w "$WIDGET" --access public)
           if [ "$PROVENANCE" = "true" ]; then args+=(--provenance); fi
           if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
-          npm publish "${args[@]}"
+          npm stage publish "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/stage.log"
 
       - name: Commit, tag and push
         if: ${{ !inputs.dry_run }}
@@ -116,23 +123,61 @@ jobs:
           git push origin HEAD:main
           git push origin "$TAG"
 
-      - name: GitHub release
+      - name: Draft GitHub release
         if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ github.token }}
           NAME: ${{ steps.version.outputs.name }}
           VERSION: ${{ steps.version.outputs.version }}
           TAG: ${{ steps.version.outputs.tag }}
-        run: gh release create "$TAG" --title "$NAME $VERSION" --generate-notes
+        run: gh release create "$TAG" --draft --title "$NAME $VERSION" --generate-notes
 
-      - name: Notify Discord
+      - name: Notify Discord (staged)
         if: ${{ !inputs.dry_run && env.DISCORD_WEBHOOK != '' }}
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           NAME: ${{ steps.version.outputs.name }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          payload=$(jq -n --arg content "📦 **$NAME@$VERSION** published to npm — https://www.npmjs.com/package/$NAME" '{content: $content}')
+          payload=$(jq -n --arg content "⏳ **$NAME@$VERSION** is staged on npm and waiting for a maintainer to approve it — https://www.npmjs.com/package/$NAME" '{content: $content}')
+          curl -sS -H "Content-Type: application/json" -X POST -d "$payload" "$DISCORD_WEBHOOK"
+
+      # npm only moves the latest dist-tag once a staged version is approved and live.
+      - name: Wait for approval on npm
+        id: approval
+        if: ${{ !inputs.dry_run }}
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Approve it now: npmjs.com → $NAME → Staged packages, or run 'npm stage list $NAME' then 'npm stage approve <stage-id>'."
+          deadline=$(( $(date +%s) + APPROVAL_WAIT_MINUTES * 60 ))
+          while [ "$(date +%s)" -lt "$deadline" ]; do
+            if [ "$(npm view "$NAME" dist-tags.latest --prefer-online 2>/dev/null)" = "$VERSION" ]; then
+              echo "approved=true" >> "$GITHUB_OUTPUT"
+              echo "$NAME@$VERSION is live."
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "approved=false" >> "$GITHUB_OUTPUT"
+          echo "::warning::$NAME@$VERSION wasn't approved within $APPROVAL_WAIT_MINUTES minutes. It stays staged; see the summary to finish the release."
+
+      - name: Publish GitHub release
+        if: ${{ steps.approval.outputs.approved == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: gh release edit "$TAG" --draft=false --latest
+
+      - name: Notify Discord (live)
+        if: ${{ steps.approval.outputs.approved == 'true' && env.DISCORD_WEBHOOK != '' }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          payload=$(jq -n --arg content "📦 **$NAME@$VERSION** is live on npm — https://www.npmjs.com/package/$NAME" '{content: $content}')
           curl -sS -H "Content-Type: application/json" -X POST -d "$payload" "$DISCORD_WEBHOOK"
 
       - name: Summary
@@ -140,12 +185,35 @@ jobs:
         env:
           NAME: ${{ steps.version.outputs.name }}
           VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
           DRY_RUN: ${{ inputs.dry_run }}
+          APPROVED: ${{ steps.approval.outputs.approved }}
         run: |
-          if [ -z "$VERSION" ]; then
-            echo "Stopped before a version was chosen. See the failed step." >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$DRY_RUN" = "true" ]; then
-            echo "Dry run: would publish **$NAME@$VERSION**. Nothing was published, committed or tagged." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Published **$NAME@$VERSION** — https://www.npmjs.com/package/$NAME" >> "$GITHUB_STEP_SUMMARY"
-          fi
+          {
+            if [ -z "$VERSION" ]; then
+              echo "Stopped before a version was chosen. See the failed step."
+            elif [ "$DRY_RUN" = "true" ]; then
+              echo "Dry run: would stage **$NAME@$VERSION**. Nothing was staged, committed or tagged."
+            elif [ "$APPROVED" = "true" ]; then
+              echo "**$NAME@$VERSION** is live on npm — https://www.npmjs.com/package/$NAME"
+              echo
+              echo "Tagged \`$TAG\` and published the GitHub release."
+            else
+              echo "**$NAME@$VERSION** is staged on npm and waiting for approval. Tagged \`$TAG\`; the GitHub release is a draft."
+              echo
+              echo "To finish:"
+              echo "1. Approve it: npmjs.com → $NAME → **Staged packages** → Approve (passkey), or \`npm stage list $NAME\` then \`npm stage approve <stage-id>\`."
+              echo "2. Publish the draft: \`gh release edit $TAG --draft=false --latest\`, or **Publish release** on the draft in GitHub."
+              echo
+              echo "To cancel instead: \`npm stage reject <stage-id>\`, then delete the draft release. The next run uses the next version number."
+            fi
+            if [ -f "$RUNNER_TEMP/stage.log" ]; then
+              echo
+              echo "<details><summary>npm stage output</summary>"
+              echo
+              echo '```'
+              cat "$RUNNER_TEMP/stage.log"
+              echo '```'
+              echo "</details>"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

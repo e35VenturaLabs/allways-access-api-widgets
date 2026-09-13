@@ -42,6 +42,8 @@ jobs:
     timeout-minutes: 60
     env:
       WIDGET: ${{ inputs.widget }}
+      # Job-level so the Discord steps' `if` can see it; a step's own env isn't visible to its `if`.
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4

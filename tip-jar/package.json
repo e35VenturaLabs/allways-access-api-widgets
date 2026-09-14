@@ -1,6 +1,6 @@
 {
   "name": "@venturalabs.ai/allways-tip-jar",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Drop-in crypto tip jar for any website: visitors tip in the coin they hold, you receive the coin you choose (SOL or TAO accepts the most), swapped by Allways.",
   "license": "MIT",
   "type": "module",

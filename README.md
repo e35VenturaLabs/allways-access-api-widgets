@@ -82,7 +82,12 @@ Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishe
 
 **One-time setup, per new widget.** Trusted publishing can only be attached to a package that already exists, so each widget's first version goes out by hand:
 1. From a clean checkout of `main`, run `npm login`, then `npm publish -w <widget>`. npm opens the browser for the passkey.
-2. On npmjs.com, open the package → **Settings** → **Trusted publishing** → **GitHub Actions**. Set organization `e35VenturaLabs`, repository `allways-access-api-widgets`, workflow `release.yml`, and no environment. Under allowed actions, keep **npm stage publish** and leave **npm publish** unchecked, so the workflow can only stage and every release needs a maintainer's approval.
+2. Connect the package to this repository's release workflow. Use the command line, not the npmjs.com form: the form saved the owner as `e35venturalabs`, and npm matches GitHub's `e35VenturaLabs` letter for letter, so every release failed with a 404. The command keeps the capitals:
+   ```bash
+   npm trust github <package> --repo e35VenturaLabs/allways-access-api-widgets --file release.yml --allow-stage-publish
+   npm trust list <package>   # repository must read e35VenturaLabs/allways-access-api-widgets
+   ```
+   Leave direct publishing off (no `--allow-publish`), so the workflow can only stage and every release needs a maintainer's approval. The workflow's **Check trusted publishing** step (runs in dry runs too) tells you right away if the connection doesn't match.
 3. Every later release goes through the workflow.
 
 If trusted publishing ever can't be used, a granular npm token saved as the **`NPM_TOKEN`** secret works as a fallback. Write tokens expire after at most 90 days.

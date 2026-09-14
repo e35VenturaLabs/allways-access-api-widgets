@@ -1,6 +1,6 @@
 {
   "name": "@venturalabs.ai/allways-tip-jar",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Drop-in crypto tip jar for any website: visitors tip in the coin they hold, you receive the coin you choose (SOL or TAO accepts the most), swapped by Allways.",
   "license": "MIT",
   "type": "module",
@@ -56,11 +56,21 @@
   },
   "typesVersions": {
     "*": {
-      "react": ["./dist/react/index.d.ts"],
-      "cloudflare-pages": ["./dist/server/cloudflare-pages.d.ts"],
-      "next": ["./dist/server/next.d.ts"],
-      "server": ["./dist/server/index.d.ts"],
-      "types": ["./dist/shared/types.d.ts"]
+      "react": [
+        "./dist/react/index.d.ts"
+      ],
+      "cloudflare-pages": [
+        "./dist/server/cloudflare-pages.d.ts"
+      ],
+      "next": [
+        "./dist/server/next.d.ts"
+      ],
+      "server": [
+        "./dist/server/index.d.ts"
+      ],
+      "types": [
+        "./dist/shared/types.d.ts"
+      ]
     }
   },
   "scripts": {

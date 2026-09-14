@@ -54,6 +54,15 @@
     "./styles.css": "./dist/react/tip-jar.css",
     "./package.json": "./package.json"
   },
+  "typesVersions": {
+    "*": {
+      "react": ["./dist/react/index.d.ts"],
+      "cloudflare-pages": ["./dist/server/cloudflare-pages.d.ts"],
+      "next": ["./dist/server/next.d.ts"],
+      "server": ["./dist/server/index.d.ts"],
+      "types": ["./dist/shared/types.d.ts"]
+    }
+  },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.server.json && tsc -p tsconfig.react.json && node --input-type=module -e \"import { css } from './dist/react/styles.js'; import { writeFileSync } from 'node:fs'; writeFileSync('dist/react/tip-jar.css', css);\"",
     "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.react.json --noEmit",

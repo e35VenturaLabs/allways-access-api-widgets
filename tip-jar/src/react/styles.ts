@@ -56,6 +56,14 @@ export const css = `:where(.tipjar) {${LIGHT}
   font-size: 15px;
   line-height: 1.45;
   box-shadow: var(--tipjar-shadow);
+  /* The dialog renders wherever the site mounts it (a centred footer, a bold nav), so don't let
+     inherited text styles leak in. */
+  text-align: start;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: normal;
 }
 :where(.tipjar)::backdrop { background: var(--tipjar-backdrop); }
 :where(.tipjar *, .tipjar *::before, .tipjar *::after) { box-sizing: border-box; }

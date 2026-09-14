@@ -104,4 +104,10 @@ describe("default theme", () => {
     expect(selectors?.length).toBeGreaterThan(20);
     for (const selector of selectors ?? []) expect(selector).toMatch(/^:where\(/);
   });
+
+  it("doesn't inherit text styles from wherever the dialog is mounted", () => {
+    const root = css.match(/:where\(\.tipjar\) \{\s*width:[^}]*\}/)?.[0] ?? "";
+    for (const reset of ["text-align: start", "font-weight: 400", "font-style: normal", "text-transform: none"])
+      expect(root).toContain(reset);
+  });
 });
